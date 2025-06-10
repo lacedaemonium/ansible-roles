@@ -1,0 +1,78 @@
+---
+# tasks file for directory_backup
+- name: Getting datatime for file naming
+  set_fact:
+    datatime_suffix: "{{ ansible_date_time.date }}"
+
+- name: Checking target backup directory is exist
+  stat:
+    path: "{{ TARGET_DIR }}"
+  register: check_target_dir
+
+- name: Logging message
+  debug:
+    msg: "The target backup directory exist"
+  when: check_target_dir.stat.exists and check_target_dir.stat.isdir
+  failed_when: not check_target_dir.stat.exists or not check_target_dir.stat.isdir
+
+- name: Checking backup directory is exist
+  stat:
+    path: "{{ BACKUP_DIR }}"
+  register: check_backup_dir
+
+- name: Logging message
+  debug:
+    msg: "The backup directory exist"
+  when: check_backup_dir.stat.exists and check_backup_dir.stat.isdir
+
+- name: Create backup directory if not exists
+  file:
+    path: "{{ BACKUP_DIR }}"
+    state: directory
+    mode: '0644'
+  become: true
+  when: not check_backup_dir.stat.exists or not check_backup_dir.stat.isdir
+
+- name: Install s3fs deb package
+  apt:
+    name: s3fs
+    state: present
+    update_cache: true
+
+- name: Template creds for s3fs
+  template:
+    src: passwd-s3fs.j2
+    dest: ~/.passwd-s3fs
+    mode: '0600'
+
+- name: Mount s3 bucket
+  mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "s3fs#{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse
+    opts: "_netdev,allow_other,use_path_request_style,url={{ BACKET_URL }}"
+    state: mounted
+
+- name: Create directory in s3 bucket
+  file:
+    path: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}"
+    state: directory
+  become: true
+
+- name: Compressing target dir
+  archive:
+    path: "{{ TARGET_DIR }}"
+    dest: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}/{{ BACKUP_FILE_NAME }}-{{ datatime_suffix }}.tar.gz"
+
+- name: Unmount s3 bucket
+  mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "s3fs#{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse
+    opts: "_netdev,allow_other,use_path_request_style,url=https://HOST_NAME"
+    state: unmounted
+
+- name: Remove creds for s3fs
+  file:
+    path: ~/.passwd-s3fs
+    state: absent

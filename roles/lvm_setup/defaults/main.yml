@@ -1,0 +1,11 @@
+---
+######\EXAMPLE/#######################
+#device: /dev/vdb,/dev/vdc,/dev/vdd
+#folder_mount_point:   /////////Обязательно указать
+# defaults vars for lvm_setup
+TYPE_FS: xfs
+VG_SIZE: 99%PVS
+LV_SIZE: 99%VG
+VG_NAME: vg_default
+LV_NAME: lv_default
+DEVICE_PREFIX: ['/dev/disk/by-id']

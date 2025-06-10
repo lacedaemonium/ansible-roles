@@ -1,0 +1,21 @@
+---
+- name: Set path to users & db-pass in vault
+  ansible.builtin.set_fact:
+    vault_secret: "{{project}}/{{env}}/{{service}}/postgresql"
+
+- name: User's and password's from vault
+  ansible.builtin.set_fact:
+    credentials: "{{ lookup('community.hashi_vault.vault_kv2_get',vault_secret, token=vault_token,engine_mount_point=vault_mountpoint, url=vault_url) }}"
+
+- name: Create a new databases
+  community.postgresql.postgresql_db:
+    name: "{{ credentials.secret.db_name }}"
+  when: ACTION == "init_db"
+
+- name: Connect & GRANT PRIVILEGES to DATABASE to USER from Vault
+  community.postgresql.postgresql_user:
+    db: "{{ credentials.secret.db_name }}"
+    name: "{{ credentials.secret.user_name }}"
+    password: "{{ credentials.secret.user_pass }}"
+    priv: "{{ user_db_privileges }}"
+    state: present

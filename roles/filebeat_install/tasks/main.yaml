@@ -1,0 +1,37 @@
+---
+- name: Download Filebeat deb package
+  ansible.builtin.get_url:
+    url: "{{ filebeat_repository }}/{{ filebeat_version }}.deb"
+    dest: "/tmp/{{ filebeat_deb_name }}.deb"
+    mode: "0755"
+  register: download
+
+- name: Install filebeat package
+  ansible.builtin.apt:
+    deb: /tmp/{{ filebeat_deb_name }}.deb
+
+- name: Create filebeat.d directory for config files
+  ansible.builtin.file:
+    path: "/etc/filebeat.d"
+    state: directory
+    mode: '0775'
+
+- name: Put filebeat config files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: "etc/filebeat/filebeat.yml.j2", dest: "/etc/filebeat/filebeat.yml", owner: "root", mode: "0644" }
+    - { src: "etc/filebeat.d/syslog.yml.j2", dest: "/etc/filebeat.d/syslog.yml", owner: "root", mode: "0644" }
+  notify:
+    - Restart filebeat service
+
+- name: Start and enable filebeat service
+  ansible.builtin.systemd:
+    name: filebeat
+    state: started
+    daemon_reload: true
+    enabled: true
+

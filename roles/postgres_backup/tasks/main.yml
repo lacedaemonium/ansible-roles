@@ -1,0 +1,90 @@
+---
+- name: Check exist backup directory
+  ansible.builtin.stat:
+    path: "{{ BACKUP_DIR }}"
+  register: register_backup_dir
+
+- name: Create a backup directory
+  ansible.builtin.file:
+    path: "{{ BACKUP_DIR }}"
+    state: directory
+    mode: '0644'
+  when: not register_backup_dir.stat.exists
+
+- name: Download geesefs
+  ansible.builtin.get_url:
+    url: https://repo.HOST_NAME.ru/repository/nexus-infra-raw/geesefs/v0.40.0/geesefs-linux-amd64
+    dest: /bin/geesefs
+    mode: '0775'
+
+- name: Create a aws directory
+  ansible.builtin.file:
+    path: "~/.aws"
+    state: directory
+    mode: '0644'
+
+- name: Template a creds to S3
+  ansible.builtin.template:
+    src: creds_s3.j2
+    dest: "~/.aws/credentials"
+    mode: '0600'
+
+- name: Template fuse.conf
+  ansible.builtin.template:
+    src: fuse.conf.j2
+    dest: "/etc/fuse.conf"
+    mode: '0644'
+
+- name: Make sure mountpoints are present in fstab
+  ansible.posix.mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse.geesefs
+    opts: "_netdev,allow_other,--file-mode=0666,--dir-mode=0777"
+    state: mounted
+
+- name: Create bucket directory
+  ansible.builtin.file:
+    path: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}"
+    state: directory
+    mode: '0644'
+
+- name: Find all files that are older than "{{ RETENTION_DAYS }}" days
+  ansible.builtin.find:
+    paths: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}"
+    age: "{{ RETENTION_DAYS }}"
+    recurse: true
+  register: filesOlderThanDays
+  when: "{{ REMOVE_OLD_FILES == true }}"
+
+- name: Remove dump's older than "{{ RETENTION_DAYS }}" days
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ filesOlderThanDays.files }}"
+  when: "{{ REMOVE_OLD_FILES == true }}"
+
+- name: Set a timestamp of backup's
+  ansible.builtin.set_fact:
+    secret:
+    timestamp_backup: "{{ ansible_date_time.iso8601_basic_short }}"
+
+- name: Dump existing database
+  community.postgresql.postgresql_db:
+    name: "{{ item }}"
+    state: dump
+    target: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}/{{ item }}-{{ timestamp_backup }}.gz"
+  with_items: "{{ DATABASES }}"
+
+- name: Unmount bucket from fstab
+  ansible.posix.mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse.geesefs
+    opts: "_netdev,allow_other,--file-mode=0666,--dir-mode=0777"
+    state: unmounted
+
+- name: Remove creds for S3-geesefs
+  ansible.builtin.file:
+    path: "~/.aws/credentials"
+    state: absent

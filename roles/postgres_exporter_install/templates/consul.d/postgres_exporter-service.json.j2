@@ -1,0 +1,17 @@
+{
+  "service": {
+    "id": "postgres_exporter",
+    "name": "postgres_exporter",
+    "tags": ["postgres_exporter"],
+    "port": 9187,
+    "checks": [
+      {
+        "id": "check-postgres_exporter-endpoint",
+        "name": "HTTP GET on port 9187",
+        "http": "http://localhost:9187",
+        "interval": "30s",
+        "timeout": "3s"
+      }
+    ]
+  }
+}

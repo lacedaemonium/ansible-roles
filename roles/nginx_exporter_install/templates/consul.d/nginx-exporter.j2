@@ -1,0 +1,17 @@
+{
+  "service": {
+    "id": "nginx-exporter",
+    "name": "nginx-exporter",
+    "tags": ["nginx-exporter"],
+    "port": {{ EXPORTER_PORT }},
+    "checks": [
+      {
+        "id": "nginx-exporter-ping",
+        "name": "HTTP API on port {{ EXPORTER_PORT }}",
+        "http": "http://localhost:{{ EXPORTER_PORT }}/",
+        "interval": "30s",
+        "timeout": "3s"
+      }
+    ]
+  }
+}

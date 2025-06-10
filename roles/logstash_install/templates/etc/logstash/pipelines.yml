@@ -1,0 +1,4 @@
+{% for item in pipelines_list | split(',') %}
+- pipeline.id: {{ item | split('/') | last }}
+  path.config: {{ '/etc/logstash/conf.d' }}/{{ item.split('/')| last }}
+{% endfor %}

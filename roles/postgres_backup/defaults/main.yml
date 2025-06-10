@@ -1,0 +1,4 @@
+BACKUP_DIR: "/backup_s3"
+BUCKET_PATH_PREFIX: "psql_backups" # Имя папки с дампами
+REMOVE_OLD_FILES: true
+RETENTION_DAYS: 30d

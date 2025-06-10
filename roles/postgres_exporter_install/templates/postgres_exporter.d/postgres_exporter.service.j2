@@ -1,0 +1,20 @@
+[Unit]
+Description="Postgresql exporter for prometheus"
+Documentation=https://github.com/prometheus-community/postgres_exporter
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty=/etc/postgres_exporter.d/postgres_exporter.env
+
+[Service]
+EnvironmentFile=/etc/postgres_exporter.d/postgres_exporter.env
+User=postgres
+Group=postgres
+ExecStart=/usr/bin/postgres_exporter --extend.query-path="/etc/postgres_exporter.d/extra_queries.yml" --auto-discover-databases
+ExecReload=/bin/kill --signal HUP $MAINPID
+KillMode=process
+KillSignal=SIGTERM
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

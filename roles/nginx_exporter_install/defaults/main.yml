@@ -1,0 +1,5 @@
+---
+# defaults file for nginx_exporter
+NGINX_EXPORTER_VERSION: 1.3.0
+EXPORTER_PORT: 9113
+NEXUS_URL: https://repo.HOST_NAME.ru

@@ -1,0 +1,12 @@
+---
+# defaults file for dir_backup
+PROJECT: "project_name"
+ENVIRONMENT: "dev"
+TARGET_DIR: "/usr"
+BACKUP_DIR: "backup_s3/"
+BACKUP_FILE_NAME: "backup_filename"
+BACKUP_BUCKET_NAME: "backup_name"
+BUCKET_KEY_ID: "bucket_key_id"
+BUCKET_ACCESS_KEY: "bucket_access_key"
+BUCKET_PATH_PREFIX: ""
+BACKET_URL: "https://HOST_NAME/"

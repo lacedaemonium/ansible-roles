@@ -1,0 +1,31 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: ubuntu:22.04
+    dockerfile: Dockerfile
+    pre_build_image: false
+    privileged: true
+provisioner:
+  name: ansible
+  lint:
+      name: ansible-lint
+verifier:
+  name: ansible
+scenario:
+  name: default
+  test_sequence:
+    - lint
+#    - destroy
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - side_effect
+    - verify
+#    - destroy

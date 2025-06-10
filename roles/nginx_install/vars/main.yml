@@ -1,0 +1,4 @@
+---
+# vars file for nginx
+NGINX_METRICS_URL: stub_status
+NGINX_METRICS_PORT: 8081

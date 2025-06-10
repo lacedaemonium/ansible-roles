@@ -1,0 +1,28 @@
+mandatory_apt_packages:
+  - lvm2
+  - nmon
+  - net-tools
+  - python3
+  - python3-pip
+  - traceroute
+  - xfsprogs
+  - curl
+  - wget
+  - dnsutils
+  - tcpdump
+  - procps
+  - htop
+  - iptraf-ng
+  - rsync
+  - openssl
+  - unzip
+
+mandatory_pip_packages:
+  - hvac
+
+apt_packages: []
+
+pip_packages:
+  - pyOpenSSL
+
+apt_upgrade_packages: []

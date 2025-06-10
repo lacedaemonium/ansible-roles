@@ -1,0 +1,13 @@
+---
+network:
+    ethernets:
+        {{ interface }}:
+          routes:
+            {% for item in ROUTES -%}
+            {% if item.network != "0.0.0.0/0" -%}
+            {% if item.network != "10.0.0.0/8" -%}
+            - to: {{ item.network }}
+              via: "{{ item.gateway }}"
+            {% endif -%}
+            {% endif -%}
+            {% endfor -%}

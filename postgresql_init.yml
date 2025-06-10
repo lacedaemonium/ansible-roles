@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: true
+  
+  tasks:
+
+  - name: Init_db in loop
+    with_items: "{{ microservice }}"
+    include_role:
+      name: postgres_init
+    vars:
+      service: "{{ item }}"

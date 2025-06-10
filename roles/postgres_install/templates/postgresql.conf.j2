@@ -1,0 +1,31 @@
+data_directory = '/var/lib/postgresql/{{ VERSION }}/main'          # use data in another directory
+hba_file = '/etc/postgresql/{{ VERSION }}/main/pg_hba.conf'        # host-based authentication file
+ident_file = '/etc/postgresql/{{ VERSION }}/main/pg_ident.conf'    # ident configuration file
+external_pid_file = '/var/run/postgresql/{{ VERSION }}-main.pid'   # write an extra PID file
+unix_socket_directories = '/var/run/postgresql'                    # comma-separated list of directories
+dynamic_shared_memory_type = posix
+
+log_line_prefix = '%m [%p] %q%u@%d '
+log_timezone = 'Etc/UTC'
+cluster_name = '{{ VERSION }}/main'
+stats_temp_directory = '/var/run/postgresql/{{ VERSION }}-main.pg_stat_tmp'
+datestyle = 'iso, mdy'
+timezone = 'Etc/UTC'
+lc_messages = 'en_US.UTF-8'                     # locale for system error message             
+lc_monetary = 'en_US.UTF-8'                     # locale for monetary formatting
+lc_numeric = 'en_US.UTF-8'                      # locale for number formatting
+lc_time = 'en_US.UTF-8'                         # locale for time formatting
+default_text_search_config = 'pg_catalog.english'
+include_dir = 'conf.d'
+
+listen_addresses = '*'
+port = {{ PG_PORT }}                             
+max_connections = {{ MAX_CONN }}                   
+shared_buffers = {{ SH_BUFFERS }}
+max_wal_size = {{ MAX_WAL }}
+min_wal_size = {{ MIN_WAL }}
+
+
+{% for item in postgresql_config_str_add %}
+{{ item.str_add }}
+{% endfor %}

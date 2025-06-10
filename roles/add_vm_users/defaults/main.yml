@@ -1,0 +1,10 @@
+---
+# defaults file for update_vm_users
+
+#######EXAMPLE########
+#USER_DATA: 
+#  - {name: "test_user", groups: "nogroup", key: ""}
+#  - {name: "test2_user", groups: "nogroup", key: ""}
+#NOPASSWD: false
+exclusive: false
+append_group: true

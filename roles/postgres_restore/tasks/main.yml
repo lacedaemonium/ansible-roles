@@ -1,0 +1,79 @@
+---
+- name: Check exist backup directory
+  stat:
+    path: "{{ BACKUP_DIR }}"
+  register: register_backup_dir
+
+- name: Create a backup directory
+  ansible.builtin.file:
+    path: "{{ BACKUP_DIR }}"
+    state: directory
+    mode: '0644'
+  when: register_backup_dir.stat.exists == false
+  
+- name: Download geesefs
+  ansible.builtin.get_url:
+    url: "{{ GEESEFS_URL }}"
+    dest: /bin/geesefs
+    mode: '0775'
+
+- name: Create a aws directory
+  ansible.builtin.file:
+    path: "~/.aws"
+    state: directory
+    mode: '0644'
+
+- name: Template a creds to S3
+  ansible.builtin.template:
+    src: creds_s3.j2
+    dest: "~/.aws/credentials"
+    mode: '0600'
+
+- name: Template fuse.conf
+  ansible.builtin.template:
+    src: fuse.conf.j2
+    dest: "/etc/fuse.conf"
+    mode: '0644'
+
+- name: Make sure mountpoints are present in fstab
+  ansible.posix.mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse.geesefs
+    opts: "_netdev,allow_other,--file-mode=0666,--dir-mode=0777"
+    state: mounted
+
+- name: Drop schema "public" with cascade
+  community.postgresql.postgresql_schema:
+    db: "{{ item }}"
+    name: public
+    state: absent
+    cascade_drop: true
+  with_items: "{{ DATABASES }}"
+
+- name: Create schema "public"
+  community.postgresql.postgresql_schema:
+    db: "{{ item }}"
+    name: public
+    state: present
+  with_items: "{{ DATABASES }}"
+
+- name: Restore database
+  community.postgresql.postgresql_db:
+    name: "{{ item }}"
+    state: restore
+    target: "{{ BACKUP_DIR }}/{{ PROJECT }}/{{ ENVIRONMENT }}/{{ BUCKET_PATH_PREFIX }}/{{ item }}-{{ timestamp_backup }}.gz"
+  with_items: "{{ DATABASES }}"
+
+- name: Unmount bucket from fstab
+  ansible.posix.mount:
+    name: "{{ BACKUP_DIR }}"
+    src: "{{ BACKUP_BUCKET_NAME }}"
+    fstype: fuse.geesefs
+    opts: "_netdev,allow_other,--file-mode=0666,--dir-mode=0777"
+    state: unmounted
+
+- name: Remove creds for geesefs
+  ansible.builtin.file:
+    path: "~/.aws/credentials"
+    state: absent

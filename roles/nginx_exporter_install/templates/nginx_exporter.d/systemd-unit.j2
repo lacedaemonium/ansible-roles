@@ -1,0 +1,17 @@
+[Unit]
+Description=Nginx exporter
+After=network.target
+
+[Service]
+Type=simple
+User=nginx_exporter
+ExecStart=/usr/bin/nginx_exporter 
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+TimeoutSec=3
+SyslogIdentifier=Nginx_exporter
+User=nginx_exporter
+Group=nginx_exporter
+
+[Install]
+WantedBy=multi-user.target

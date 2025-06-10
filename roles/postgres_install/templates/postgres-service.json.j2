@@ -1,0 +1,17 @@
+{
+  "service": {
+    "id": "postgres",
+    "name": "postgres",
+    "tags": ["postgres"],
+    "port": {{ PG_PORT }},
+    "checks": [
+      {
+        "id": "check-postgres-endpoint",
+        "name": "TCP on port {{ PG_PORT }}",
+        "tcp": "localhost:{{ PG_PORT }}",
+        "interval": "30s",
+        "timeout": "3s"
+      }
+    ]
+  }
+}

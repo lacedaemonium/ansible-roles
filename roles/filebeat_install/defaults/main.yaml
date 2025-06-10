@@ -1,0 +1,7 @@
+filebeat_repository: "https://repo.HOST_NAME.ru/repository"
+filebeat_version: "8.12.2"
+filebeat_deb_name: "filebeat"
+logstash_host: "" # IP and PORT of a logstash-server, example: 192.168.0.1:5044
+logfiles_watched_list:  # List of log files to be taken by filebeat
+  - "/var/log/syslog"
+  - "/var/log/auth.log"

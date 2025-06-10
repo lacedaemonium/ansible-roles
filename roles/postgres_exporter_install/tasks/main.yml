@@ -1,0 +1,45 @@
+- name: Download postgres exporter binary
+  ansible.builtin.get_url:
+    url: "{{ NEXUS_URL }}/repository/nexus-infra-raw/postgres_exporter/{{ POSTGRES_EXPORTER_VERSION }}/postgres_exporter"
+    dest: /usr/bin/postgres_exporter
+    mode: "0755"
+
+- name: Create necessary directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    state: directory
+  with_items:
+    - { path: "/etc/postgres_exporter.d", owner: "postgres", mode: "0755" }
+    - { path: "/etc/consul.d", owner: "root", mode: "0755" }
+
+- name: Put postgres exporter Systemd file
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: "postgres_exporter.d/postgres_exporter.service.j2", dest: "/etc/systemd/system/postgres_exporter.service", owner: "postgres", mode: "0644" }
+    - { src: "postgres_exporter.d/postgres_exporter.env.j2", dest: "/etc/postgres_exporter.d/postgres_exporter.env", owner: "postgres", mode: "0644" }
+    - { src: "postgres_exporter.d/extra_queries.yml.j2", dest: "/etc/postgres_exporter.d/extra_queries.yml", owner: "postgres", mode: "0644" }
+  notify:
+    - "Restart postgres_exporter"
+
+- name: Register posgres exporter in consul
+  ansible.builtin.template:
+    src: "consul.d/postgres_exporter-service.json.j2"
+    dest: "/etc/consul.d/postgres_exporter-service.json"
+    owner: "root"
+    mode: "0644"
+  notify:
+    - "Reload consul agent"
+
+- name: Enable postgres_exporter
+  ansible.builtin.systemd:
+    state: started
+    enabled: true
+    daemon_reload: true
+    name: postgres_exporter

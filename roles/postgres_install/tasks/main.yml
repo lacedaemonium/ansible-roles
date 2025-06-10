@@ -1,0 +1,88 @@
+---
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/
+    state: directory
+    mode: "0755"
+  when: ACTION == "install"
+
+- name: Add repo key
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    keyring: /etc/apt/keyrings/postgres.gpg
+  when: ACTION == "install"
+
+- name: Add postgresql repo
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/postgres.gpg] https://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+    filename: "/etc/apt/sources.list.d/pgdg.list"
+    state: present
+  when: ACTION == "install"
+
+- name: Install PostgreSQL
+  ansible.builtin.apt:
+    update_cache: true
+    pkg: "postgresql-{{ VERSION }}"
+    state: present
+  when: ACTION == "install"
+
+- name: Uninstall PostgreSQL
+  ansible.builtin.apt:
+    pkg: "postgresql-{{ VERSION }}"
+    state: absent
+    autoremove: true
+    purge: true
+  when: ACTION == "uninstall"
+
+- name: Grant access to postgresql from localhost by postgres user without password
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/{{ VERSION }}/main/pg_hba.conf
+    contype: local
+    users: postgres
+    databases: all
+    method: trust
+  when: ACTION == "install"
+
+- name: Grant for ext users
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/{{ VERSION }}/main/pg_hba.conf
+    contype: "{{ item.TYPE }}"
+    users: "{{ item.USER }}"
+    source: "{{ item.ADDRESS }}"
+    databases: "{{ item.DATABASE }}"
+    method: "{{ item.METHOD }}"
+  register: pghba
+  with_items: "{{ ACCESS }}"
+  when: ACTION == "install"
+
+- name: Create config for postgresql
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "/etc/postgresql/{{ VERSION }}/main/postgresql.conf"
+    owner: "postgres"
+    group: "postgres"
+    mode: "0640"
+  register: pgconfig
+  when: ACTION == "install"
+
+- name: Restart PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+  when: pghba.changed or pgconfig.changed
+
+- name: Ensure consul directory exists
+  ansible.builtin.file:
+    path: "/etc/consul.d"
+    state: directory
+    mode: "0775"
+
+- name: Put postgresql file in consul directory
+  ansible.builtin.template:
+    src: postgres-service.json.j2
+    dest: "/etc/consul.d/postgres-service.json"
+    owner: "root"
+    mode: "0644"
+  
+
+

@@ -1,0 +1,122 @@
+{% for core_item in core %}
+{% if core_item['user'] is defined %}
+user {{ core_item['user'] }};
+{% endif %}
+
+{% if core_item['worker_processes'] is defined %}
+worker_processes {{ core_item['worker_processes'] }};
+{% endif %}
+
+{% if core_item['error_log'] is defined %}
+error_log {{ core_item['error_log'] }};
+{% endif %}
+{% if core_item['pid'] is defined %}
+pid {{ core_item['pid'] }};
+{% endif %}
+
+{% if core_item['worker_rlimit_nofile'] is defined %}
+worker_rlimit_nofile {{ core_item['worker_rlimit_nofile'] }};
+{% endif %}
+{% if core_item['worker_connections'] is defined %}
+events {
+    worker_connections {{ core_item['worker_connections'] }};
+}
+{% endif %}
+
+
+http {
+{% if core_item['include'] is defined %}
+    include {{ core_item['include'] }};
+{% endif %}
+
+{% if core_item['default_type'] is defined %}
+    default_type {{ core_item['default_type'] }};
+{% endif %}
+
+{% if core_item['server_names_hash_bucket_size'] is defined %}
+    # server_names_hash_bucket_size {{ core_item['server_names_hash_bucket_size'] }};
+{% endif %}
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" "$http_x_forwarded_for"';
+    log_format  extended  '$time_iso8601 $remote_addr $remote_user $host [$request] $body_bytes_sent $request_time $status [$http_referer] [$http_user_agent] $http_x_forwarded_for';
+    log_format detailed  $time_iso8601 $remote_addr $remote_user $host [$request] $body_bytes_sent $request_time $status [$http_referer] [$http_user_agent] $http_x_forwarded_for;
+    log_format access_custom '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$upstream_addr" $request_length '
+                      '$bytes_sent $request_time "$https" $host';
+{% if core_item['access_log'] is defined %}
+    access_log {{ core_item['access_log'] }};
+{% endif %}
+
+{% if core_item['sendfile'] is defined %}
+    sendfile {{ core_item['sendfile'] }};
+{% endif %}
+
+{% if core_item['keepalive_timeout'] is defined %}
+    keepalive_timeout {{ core_item['keepalive_timeout'] }};
+{% endif %}
+
+{% if core_item['gzip'] is defined %}
+    gzip {{ core_item['gzip'] }};
+{% endif %}
+{% if core_item['gzip_comp_level'] is defined %}
+    gzip_comp_level {{ core_item['gzip_comp_level'] }};
+{% endif %}
+{% if core_item['gzip_http_version'] is defined %}
+    gzip_http_version {{ core_item['gzip_http_version'] }};
+{% endif %}
+{% if core_item['gzip_proxied'] is defined %}
+    gzip_proxied {{ core_item['gzip_proxied'] }};
+{% endif %}
+{% if core_item['gzip_min_length'] is defined %}
+    gzip_min_length {{ core_item['gzip_min_length'] }};
+{% endif %}
+{% if core_item['gzip_buffers'] is defined %}
+    gzip_buffers {{ core_item['gzip_buffers'] }};
+{% endif %}
+{% if core_item['gzip_types'] is defined %}
+    gzip_types {{ core_item['gzip_types'] }};
+{% endif %}
+{% if core_item['gzip_disable'] is defined %}
+    gzip_disable {{ core_item['gzip_disable'] }};
+{% endif %}
+{% if core_item['gzip_vary'] is defined %}
+    gzip_vary {{ core_item['gzip_vary'] }};
+{% endif %}
+
+{% if core_item['server_tokens'] is defined %}
+    server_tokens {{ core_item['server_tokens'] }};
+{% endif %}
+
+{% if core_item['proxy_headers_hash_bucket_size'] is defined %}
+    proxy_headers_hash_bucket_size {{ core_item['proxy_headers_hash_bucket_size'] }};
+{% endif %}
+
+{% if core_item['client_body_buffer_size'] is defined %}
+    client_body_buffer_size {{ core_item['client_body_buffer_size'] }};
+{% endif %}
+{% if core_item['client_max_body_size'] is defined %}
+    client_max_body_size {{ core_item['client_max_body_size'] }};
+{% endif %}
+
+{% if core_item['proxy_max_temp_file_size'] is defined %}
+    proxy_max_temp_file_size {{ core_item['proxy_max_temp_file_size'] }};
+{% endif %}
+
+{% if core_item['fastcgi_buffers'] is defined %}
+    fastcgi_buffers {{ core_item['fastcgi_buffers'] }};
+{% endif %}
+{% if core_item['fastcgi_busy_buffers_size'] is defined %}
+    fastcgi_busy_buffers_size {{ core_item['fastcgi_busy_buffers_size'] }};
+{% endif %}
+{% if core_item['fastcgi_temp_file_write_size'] is defined %}
+    fastcgi_temp_file_write_size {{ core_item['fastcgi_temp_file_write_size'] }};
+
+{% endif %}
+    include /etc/nginx/conf.d/*.conf;
+{% endfor %}
+}
+
+stream {
+    include /etc/nginx/stream.d/*.conf;
+}

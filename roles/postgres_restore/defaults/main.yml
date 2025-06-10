@@ -1,0 +1,5 @@
+---
+# defaults file for pgrestore
+BACKUP_DIR: "/backup_s3"
+BUCKET_PATH_PREFIX: "psql_backups"
+GEESEFS_URL: "https://repo.HOST_NAME.ru/repository/nexus-infra-raw/geesefs/v0.40.0/geesefs-linux-amd64"

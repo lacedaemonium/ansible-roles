@@ -1,0 +1,8 @@
+# defaults file for routes_setup
+#ROUTES:
+#- {network: 192.168.182.0/24, gateway: 10.22.1.3}
+#- {network: 192.168.183.0/24, gateway: 10.22.1.3}
+#- {network: 192.168.184.0/24, gateway: 10.22.1.3}
+#- {network: 192.168.185.0/24, gateway: 10.22.1.3}
+
+interface: eth0

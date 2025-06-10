@@ -1,0 +1,9 @@
+---
+# defaults file for postgres_init
+#project: tms #Укажите название проекта
+#env: dev #Укажите окружение
+#vault_token: # Токен для Vault
+vault_mountpoint: project_secrets
+vault_url: https://pki.HOST_NAME.ru/
+ACTION: "init_db"
+user_db_privileges: "CONNECT/ALL"

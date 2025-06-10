@@ -1,0 +1,35 @@
+- type: log
+  enabled: true
+  paths:
+{% for item in logfiles_watched_list %}
+    - {{ item }}
+{% endfor %}
+  scan_frequency: 10s
+
+  processors:
+    - dissect:
+        when:
+          equals:
+            log.file.path: "/var/log/syslog"
+        tokenizer: "%{occured_at->} %{+occured_at->} %{+occured_at} %{hostname} %{name_and_pid}: %{syslog_full_message->}"
+        field: "message"
+        ignore_missing: true
+        target_prefix: "dissected"
+
+    - add_tags:
+        when:
+          regexp:
+            dissected.name_and_pid: '\bsh\[\d+\]'
+        tags: [kafka-app-log]
+
+    - add_tags:
+        when:
+          regexp:
+            dissected.name_and_pid: '\bconsul\[\d+\]'
+        tags: [consul-app-log]
+
+    - add_tags:
+        when:
+          regexp:
+            dissected.name_and_pid: '\bfilebeat\[\d+\]'
+        tags: [filebeat-app-log]

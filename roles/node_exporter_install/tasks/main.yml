@@ -1,0 +1,53 @@
+- name: Ensure group node_exporter exists
+  ansible.builtin.group:
+    name: node_exporter
+    state: present
+
+- name: Create Node Exporter user
+  ansible.builtin.user:
+    name: node_exporter
+    shell: /bin/bash
+    group: node_exporter
+
+- name: Download Node_exporter binary
+  ansible.builtin.get_url:
+    url: "{{ NEXUS_URL }}/repository/nexus-infra-raw/node_exporter/{{ NODE_EXPORTER_VERSION }}/node_exporter"
+    dest: /usr/bin/node_exporter
+    mode: "0755"
+
+- name: Create necessary directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    state: directory
+  with_items:
+    - { path: "/etc/node_exporter.d", owner: "node_exporter", mode: "0755" }
+
+- name: Put Node Exporter Systemd file
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: "server/node_exporter.service.j2", dest: "/etc/systemd/system/node_exporter.service", owner: "root", mode: "0755" }
+    - { src: "server/node_exporter.socket.j2", dest: "/etc/systemd/system/node_exporter.socket", owner: "root", mode: "0755" }
+    - { src: "server/node_exporter.env.j2", dest: "/etc/node_exporter.d/node_exporter.env", owner: "node_exporter", mode: "0755" }
+    - { src: "consul.d/node-exporter-service.json", dest: "/etc/consul.d/node-exporter-service.json", owner: "root", mode: "0755" }
+
+- name: Enable Node Exporter and reload systemd
+  ansible.builtin.systemd:
+    state: started
+    enabled: true
+    daemon_reload: true
+    name: node_exporter
+
+- name: Enable Consul and reload systemd
+  ansible.builtin.systemd:
+    state: started
+    enabled: true
+    daemon_reload: true
+    name: consul
+  ignore_errors: true

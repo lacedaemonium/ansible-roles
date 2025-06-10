@@ -1,0 +1,17 @@
+#default vars
+ACTION: install
+VERSION: "13"
+PG_PORT: "5432"
+MAX_CONN: "100"
+SH_BUFFERS: "128MB"
+MAX_WAL: "1GB"
+MIN_WAL: "80MB"
+###Add strings in postgresql.conf
+postgresql_config_str_add:
+    - { str_add: "ssl = on"}
+    - { str_add: "ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'"}
+    - { str_add: "ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'"}
+
+ACCESS:
+    - { TYPE: host, DATABASE: all, USER: all, ADDRESS: 10.0.0.0/8, METHOD: md5 }
+    - { TYPE: local, DATABASE: all, USER: all, ADDRESS: "", METHOD: md5 }

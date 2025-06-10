@@ -1,0 +1,44 @@
+---
+# tasks file for update_vm_users
+- name: Ensure group exists with the same name as the user
+  ansible.builtin.group:
+    name: "{{ item.groups }}"
+    state: present
+  with_items: "{{ USER_DATA }}"
+
+- name: Add the user with a specific shell and specific groups (only listed groups)
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    shell: /bin/bash
+    groups: "{{ item.groups }}"
+    append: "{{ append_group }}"
+  with_items: "{{ USER_DATA }}"
+
+- name: Set authorized key
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    exclusive: "{{ exclusive }}"
+    key: "{{ item.key }}"
+    path: /home/{{ item.name }}/.ssh/authorized_keys
+    manage_dir: false
+  with_items: "{{ USER_DATA }}"
+
+- name: Make user {{ item.name }} nopasswd sudoers
+  ansible.builtin.template:
+    src: sudo.j2
+    dest: /etc/sudoers.d/{{ item.name }}
+    mode: '0644'
+  with_items: "{{ USER_DATA }}"
+  when: NOPASSWD == "true"
+
+- name: Get list of users in /home
+  ansible.builtin.find:
+    paths: /home
+    file_type: directory
+    depth: 1
+  register: home_users
+
+- name: Output the list of users in /home
+  ansible.builtin.debug:
+    msg: "Users in /home: {{ home_users.files | map(attribute='path') | map('basename') | list }}"

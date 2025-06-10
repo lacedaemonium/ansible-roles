@@ -1,0 +1,12 @@
+---
+  - name: Update APT package manager repositories cache
+    ansible.builtin.apt:
+      update_cache: true
+      cache_valid_time: 3600
+
+  - debug:
+      msg: "Based on your request java version to be installed is: {{ JAVA_VERSION }}"
+
+  - name: Install Java using Ansible
+    ansible.builtin.apt:
+      name: "openjdk-{{ JAVA_VERSION }}-jdk"

@@ -1,0 +1,37 @@
+---
+- name: "Install logstash deb package"
+  ansible.builtin.apt:
+    deb: "{{ logstash_repository }}/logstash-{{ logstash_version }}-amd64.deb"
+
+- name: "Create logstash config directories"
+  ansible.builtin.file:
+    path: "/etc/logstash/conf.d/default"
+    state: directory
+    mode: '0775'
+
+- name: "Use custom pipeline(s) config(s)"
+  template:
+    src: "{{ item }}"
+    dest: "/etc/logstash/conf.d/"
+  with_fileglob:
+    - "templates/etc/logstash/custom_pipelines/*.conf"
+
+- name: "Build pipeline.yml config based on custom pipelines"
+  ansible.builtin.set_fact:
+    pipelines_list: "{{ lookup('ansible.builtin.fileglob', 'templates/etc/logstash/custom_pipelines/*.conf') }}"
+  notify:
+    - Restart logstash service
+
+- name: "Copy pipeline.yml config to logstash dir"
+  ansible.builtin.template:
+    src: "etc/logstash/pipelines.yml"
+    dest: "/etc/logstash/pipelines.yml"
+  notify:
+    - Restart logstash service
+
+- name: "Start and enable logstash service"
+  ansible.builtin.systemd:
+    name: logstash
+    state: started
+    daemon_reload: true
+    enabled: true

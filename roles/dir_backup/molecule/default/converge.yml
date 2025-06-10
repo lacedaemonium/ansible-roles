@@ -1,0 +1,13 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: install dependency
+      apt:
+        name: fuse-overlayfs
+        state: present
+        update_cache: true
+
+    - name: "Include dpk.dir_backup"
+      include_role:
+        name: "dpk.dir_backup"

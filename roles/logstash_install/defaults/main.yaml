@@ -1,0 +1,9 @@
+logstash_repository: "https://repo.HOST_NAME.ru/repository/"
+logstash_version: "8.14.1"
+logstash_input_port: "5044"
+elastic_server_hosts: ""                                      # list of elastic servers, EXAMPLE: ['192.168.0.1','192.168.0.2','192.168.0.3']
+elastic_servers_port: "9200"                                  # port of elastic server
+# authorization_in_elastic_enabled: "true"                    # doesn't work so far
+# elastic_user: "elastic"                                     # doesn't work so far
+# elastic_password: "elastic"                                 # doesn't work so far
+# ssl_to_elastic_enabled: "false"                             # doesn't work so far

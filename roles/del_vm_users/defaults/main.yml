@@ -1,0 +1,5 @@
+---
+# defaults file for del_vm_users
+####EXAMPLE####
+
+USER_DATA: ["test_user", "test2_user"]

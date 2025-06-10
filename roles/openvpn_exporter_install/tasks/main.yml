@@ -1,0 +1,57 @@
+- name: Ensure group openvpn_exporter exists
+  ansible.builtin.group:
+    name: openvpn_exporter
+    state: present
+
+- name: Create openvpn_exporter user
+  ansible.builtin.user:
+    name: openvpn_exporter
+    shell: /usr/sbin/nologin
+    group: openvpn_exporter
+
+- name: Download openvpn_exporter binary
+  ansible.builtin.get_url:
+    url: "{{ NEXUS_URL }}/repository/nexus-infra-raw/openvpn_exporter/{{ OPENVPN_EXPORTER_VERSION }}/openvpn_exporter"
+    dest: /usr/local/bin/openvpn_exporter
+    mode: "0755"
+
+- name: Create necessary directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    state: directory
+  with_items:
+    - { path: "/etc/openvpn_exporter.d", owner: "openvpn_exporter", mode: "0755" }
+
+- name: Put openvpn_exporter systemd file
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ item.owner }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - { src: "server/openvpn_exporter.service.j2", dest: "/etc/systemd/system/openvpn_exporter.service", owner: "root", mode: "0755" }
+    - { src: "server/openvpn_exporter.env.j2", dest: "/etc/openvpn_exporter.d/openvpn_exporter.env", owner: "openvpn_exporter", mode: "0755" }
+    - { src: "consul.d/openvpn-exporter-service.json", dest: "/etc/consul.d/openvpn-exporter-service.json", owner: "root", mode: "0755" }
+
+- name: Modify openvpn-status.log permissions
+  ansible.builtin.file:
+    path: /var/log/openvpn/openvpn-status.log
+    owner: root
+    group: openvpn_exporter
+    mode: '0640'
+
+- name: Enable openvpn_exporter and reload systemd
+  ansible.builtin.systemd:
+    state: started
+    enabled: true
+    daemon_reload: true
+    name: openvpn_exporter
+
+- name: Restart consul agent
+  ansible.builtin.systemd:
+    state: restarted
+    name: consul
+  ignore_errors: true

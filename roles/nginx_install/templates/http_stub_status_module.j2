@@ -1,0 +1,14 @@
+server {
+  listen {{ NGINX_METRICS_PORT }};
+  server_name localhost;
+
+  access_log off;
+  allow 127.0.0.1;
+  deny all;
+
+  location /{{ NGINX_METRICS_URL }} {
+    stub_status;
+    # ensures the version information can be retrieved
+    server_tokens on;
+  }
+}

@@ -1,0 +1,8 @@
+---
+# tasks file for del_vm_users
+- name: Remove the user 
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: yes
+  with_items: "{{ USER_DATA }}"

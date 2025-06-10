@@ -1,0 +1,10 @@
+---
+- name: Restart postgres_exporter
+  service:
+    name: postgres_exporter
+    state: restarted
+
+- name: Reload consul agent
+  service:
+    name: consul
+    state: reloaded

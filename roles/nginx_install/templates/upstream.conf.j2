@@ -1,0 +1,19 @@
+upstream {{ item.name }} {
+{% if item.server is defined %}
+    server {{ item.server }};
+{% endif %}
+}
+
+server {
+{% if item.listen is defined %}
+    listen {{ item.listen }};
+{% endif %}
+{% if (item.proxy_protocol is defined) and (item.proxy_protocol == 'http') %}
+    location / {
+        proxy_pass http://{{ item.name }};
+    }
+{% endif %}
+{% if (item.proxy_protocol is defined) and (item.proxy_protocol == 'tcp') %}
+    proxy_pass {{ item.name }};
+{% endif %}
+}
